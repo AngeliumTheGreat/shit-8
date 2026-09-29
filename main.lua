@@ -192,7 +192,34 @@ local opcodes = {
 
 -- tests if only arg is --test
 if #arg == 1 and arg[1] == "--test" then
+    local function run(op) return opcodes[(op & 0xF000) >> 12](op) end
 
+    -- 1NNN
+    pc = 0
+    run(0x1420)
+    assert(pc == 0x420)
+    -- 3XNN, 4XNN, 5XY0
+    do
+        pc = 4
+        register[4] = 0x33
+        run(0x3333)
+        assert(pc == 6 and register[4] == 0x33)
+        run(0x3320)
+        assert(pc == 6)
+        run(0x4333)
+        assert(pc == 6 and register[4] == 0x33)
+        run(0x4320)
+        assert(pc == 8)
+        register[8] = 0xF
+        register[9] = 0xF
+        run(0x5370)
+        assert(pc == 8 and register[8] == 0xF and register[9] == 0xF)
+        run(0x5870)
+        assert(pc == 10)
+    end
+
+
+    os.exit()
 end
 
 while true do
