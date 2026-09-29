@@ -21,6 +21,9 @@ local callstack = {}
 local delay_timer = 0
 local sound_timer = 0
 
+-- vf is funky
+local VF = 16
+
 -- opcodes
 local opcodes = {
     [0] = function (op)
@@ -66,7 +69,7 @@ local opcodes = {
 
     [5] = function (op)
         if (op & 0x000F) ~= 0 then
-            error("invalid 5XYN instruction")
+            error("invalid 5XY0 instruction")
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
@@ -106,39 +109,41 @@ local opcodes = {
 
         elseif c == 4 then
             if register[x+1] + register[y+1] > 0xFF then 
-                register[16]=1
-                else register[16]=0
+                register[VF]=1
+                else register[VF]=0
             end
             register[x+1] = (register[x+1] + register[y+1]) % 256
 
         elseif c == 5 then
             if register[x+1] - register[y+1] < 0 then 
-                register[16]=0
-                else register[16]=1
+                register[VF]=0
+                else register[VF]=1
             end
             register[x+1] = (register[x+1] - register[y+1]) % 256
 
         elseif c == 6 then
-            register[16] = register[x+1] & 0x1
+            register[VF] = register[x+1] & 0x1
             register[x+1] = register[x+1] >> 1
 
         elseif c == 7 then
             if (register[y+1] - register[x+1] < 0) then
-                register[16]=0
-                else register[16]=1
+                register[VF]=0
+                else register[VF]=1
             end
             register[x+1] = (register[y+1] - register[x+1]) % 256
-            
+
         elseif c == 0xE then
-            register[16] = (register[x+1] & 0x80) >> 7
+            register[VF] = (register[x+1] & 0x80) >> 7
             register[x+1] = (register[x+1] << 1) & 0xFF
+
+        else error("invalid 8XYN instruction")
 
         end
     end,
 
     [9] = function (op)
         if (op & 0x000F) ~= 0 then
-            error("invalid 9XYN instruction")
+            error("invalid 9XY0 instruction")
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
@@ -185,7 +190,7 @@ local opcodes = {
             -- IMPLEMENT
 
         elseif c == 0x33 then
-            program[pointer+1] = math.floor(register[x+1] / 100)
+            program[pointer+1] = math.floor(register[x+1] / 100) % 10
             program[pointer+2] = math.floor((register[x+1] / 10) % 10)
             program[pointer+3] = register[x+1] % 10
 
@@ -198,6 +203,8 @@ local opcodes = {
             for i=0,x do
                 register[i+1]=program[pointer+i+1]
             end
+
+        else error("invalid FXNN instruction")
 
         end
     end
