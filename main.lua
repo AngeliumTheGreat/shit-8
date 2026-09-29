@@ -93,7 +93,7 @@ local opcodes = {
             register[x+1] = register[x+1] >> 1
 
         elseif c == 7 then
-            register[x+1] = register[y+1] - register[x+1])
+            register[x+1] = register[y+1] - register[x+1]
             register[16] = register[x+1] < 0 and 0 or 1
             register[x+1] = register[x+1] & 0xFF
         elseif c == 0xE then
@@ -118,6 +118,11 @@ local opcodes = {
         register[x+1] = math.random(0, 255) & nn
     end,
 }
+
+-- tests if only arg is --test
+if #arg == 1 and arg[1] == "--test" then
+
+end
 
 while true do
     local op = (program[pc + 1] << 8) + program[pc + 2]
