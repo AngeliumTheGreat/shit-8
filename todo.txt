@@ -9,19 +9,12 @@
 OPCODES
 - 0NNN
 - 00E0
-- 00EE
-- 2NNN
 - 8XY7
 - 8XYE
-- 9XY0
 - DXYN
 - EX9E
 - EXA1
-- FX07
 - FX0A
-- FX15
-- FX18
-- FX1E
 - FX29
 - FX33
 - FX55
