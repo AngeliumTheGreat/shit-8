@@ -25,6 +25,9 @@ local sound_timer = 0
 local opcodes = {
     [0] = function (op)
         if op == 0x00EE then
+            if #callstack == 0 then
+                error("stack underflow")
+            end
             pc = callstack[#callstack]
             table.remove(callstack,#callstack)
         elseif op == 0x00E0 then
@@ -63,6 +66,9 @@ local opcodes = {
     end,
 
     [5] = function (op)
+        if (op & 0x000F) ~= 0 then
+            return
+        end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
         if register[x+1] == register[y+1] then
@@ -104,11 +110,14 @@ local opcodes = {
                 register[16]=1
                 else register[16]=0
             end
-            register[x+1] = (register[x+1] + register[y+1]) % 0xFF
+            register[x+1] = (register[x+1] + register[y+1]) % 256
 
         elseif c == 5 then
-            register[16] = register[x+1] - register[y+1] < 0 and 0 or 1
-            register[x+1] = (register[x+1] - register[y+1]) & 0xFF
+            if register[x+1] - register[y+1] < 0 then 
+                register[16]=0
+                else register[16]=1
+            end
+            register[x+1] = (register[x+1] - register[y+1]) % 256
 
         elseif c == 6 then
             register[16] = register[x+1] & 0x1
@@ -119,16 +128,19 @@ local opcodes = {
                 register[16]=0
                 else register[16]=1
             end
-            register[x+1] = (register[y+1] - register[x+1]) % 0xFF
+            register[x+1] = (register[y+1] - register[x+1]) % 256
             
         elseif c == 0xE then
-            register[16] = (register[x+1] & 0x80) >> 15
-            register[x+1] = register[x+1] << 1
+            register[16] = (register[x+1] & 0x80) >> 7
+            register[x+1] = (register[x+1] << 1) & 0xFF
 
         end
     end,
 
     [9] = function (op)
+        if (op & 0x000F) ~= 0 then
+            return
+        end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
         if register[x+1] ~= register[y+1] then
