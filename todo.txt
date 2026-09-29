@@ -7,10 +7,9 @@
 - timers
 
 OPCODES
-- 00E0
-- DXYN
-- EX9E
-- EXA1
-- FX0A
-- FX29
-- FX33
+- 00E0, clear screen
+- DXYN, draw sprite on screen
+- EX9E, skip next instruction if key is pressed
+- EXA1, skip next instruction if key is not pressed
+- FX0A, getkey
+- FX29, set pointer to location of sprite for char
