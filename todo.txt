@@ -7,10 +7,7 @@
 - timers
 
 OPCODES
-- 0NNN
 - 00E0
-- 8XY7
-- 8XYE
 - DXYN
 - EX9E
 - EXA1
