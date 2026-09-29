@@ -119,9 +119,10 @@ local opcodes = {
 
         elseif c == 7 then
             register[x+1] = register[y+1] - register[x+1]
-            -- important: add VF underflow behavior here
-
+            register[16] = register[x+1] < 0 and 0 or 1
+            register[x+1] = register[x+1] & 0xFF
         elseif c == 0xE then
+            register[16] = (register[x+1] & 0x8000) >> 15
             register[x+1] = register[x+1] << 1
             -- important: fuck
 
@@ -176,6 +177,11 @@ local opcodes = {
         end
     end
 }
+
+-- tests if only arg is --test
+if #arg == 1 and arg[1] == "--test" then
+
+end
 
 while true do
     local op = (program[pc + 1] << 8) + program[pc + 2]
