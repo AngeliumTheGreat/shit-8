@@ -250,6 +250,12 @@ if #arg == 1 and arg[1] == "--test" then
     run(0xB200)
     assert(pc == 0x204)
 
+    -- CXNN
+    for i=1, 100 do
+        run(0xC40F)
+        assert(register[5] & 0xF0 == 0)
+    end
+
     os.exit()
 end
 
