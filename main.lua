@@ -93,13 +93,12 @@ local opcodes = {
             register[x+1] = register[x+1] >> 1
 
         elseif c == 7 then
-            register[x+1] = register[y+1] - register[x+1]
-            -- important: add VF underflow behavior here
-
+            register[x+1] = register[y+1] - register[x+1])
+            register[16] = register[x+1] < 0 and 0 or 1
+            register[x+1] = register[x+1] & 0xFF
         elseif c == 0xE then
+            register[16] = (register[x+1] & 0x8000) >> 15
             register[x+1] = register[x+1] << 1
-            -- important: fuck
-            
         end
     end,
 
