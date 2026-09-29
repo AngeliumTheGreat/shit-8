@@ -79,7 +79,7 @@ local opcodes = {
     [7] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        register[x+1]=register[x+1]+nn
+        register[x+1]= math.min(register[x+1]+nn, 0xFF)
     end,
 
     [8] = function (op)
@@ -257,6 +257,13 @@ if #arg == 1 and arg[1] == "--test" then
         run(0xC40F)
         assert(register[5] & 0xF0 == 0)
     end
+
+    -- 7XNN
+    register[3] = 0xD0
+    run(0x7208)
+    assert(register[3] == 0xD8)
+    run(0x72FF)
+    assert(register[3] == 0xFF)
 
     os.exit()
 end
