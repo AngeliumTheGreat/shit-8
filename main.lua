@@ -14,10 +14,35 @@ end
 local pointer = 0
 local pc = 0
 
+-- callstack
+local callstack = {}
+
+-- timers
+local delay_timer = 0
+local sound_timer = 0
+
 -- opcodes
 local opcodes = {
+    [0] = function (op)
+        if op == 0x00EE then
+            pc = callstack[#callstack]
+            table.remove(callstack,#callstack)
+        elseif op == 0x00E0 then
+            -- IMPLEMENT: clear screen
+        else
+            -- IMPLEMENT: call machine code routine silly shit
+        end
+    end,
+
     [1] = function (op)
         local nnn = (op & 0x0FFF)
+        pc = nnn
+    end,
+
+    [2] = function (op)
+        local nnn = (op & 0x0FFF)
+        pc = pc + 2
+        table.insert(callstack, pc)
         pc = nnn
     end,
 
@@ -99,7 +124,15 @@ local opcodes = {
         elseif c == 0xE then
             register[x+1] = register[x+1] << 1
             -- important: fuck
-            
+
+        end
+    end,
+
+    [9] = function (op)
+        local x = (op & 0x0F00) >> 8
+        local y = (op & 0x00F0) >> 4
+        if register[x+1] ~= register[y+1] then
+            pc = pc + 2
         end
     end,
 
@@ -118,6 +151,30 @@ local opcodes = {
         local nn = (op & 0x00FF)
         register[x+1] = math.random(0, 255) & nn
     end,
+
+    [0xF] = function (op)
+        local x = (op & 0x0F00) >> 8
+        local c = (op & 0x00FF)
+        if c == 0x07 then
+            register[x+1] = delay_timer
+        elseif c == 0x0A then
+            -- IMPLEMENT
+        elseif c == 0x15 then
+            delay_timer = register[x+1]
+        elseif c == 0x18 then
+            sound_timer = register[x+1]
+        elseif c == 0x1E then
+            pointer = pointer + register[x+1]
+        elseif c == 0x29 then
+            -- IMPLEMENT
+        elseif c == 0x33 then
+            -- IMPLEMENT
+        elseif c == 0x55 then
+            -- IMPLEMENT
+        elseif c == 0x65 then
+            -- IMPLEMENT
+        end
+    end
 }
 
 while true do
