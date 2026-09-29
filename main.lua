@@ -44,7 +44,6 @@ local opcodes = {
 
     [2] = function (op)
         local nnn = (op & 0x0FFF)
-        pc = pc + 2
         table.insert(callstack, pc)
         pc = nnn
     end,
@@ -67,7 +66,7 @@ local opcodes = {
 
     [5] = function (op)
         if (op & 0x000F) ~= 0 then
-            return
+            error("invalid 5XYN instruction")
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
@@ -139,7 +138,7 @@ local opcodes = {
 
     [9] = function (op)
         if (op & 0x000F) ~= 0 then
-            return
+            error("invalid 9XYN instruction")
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
@@ -186,18 +185,18 @@ local opcodes = {
             -- IMPLEMENT
 
         elseif c == 0x33 then
-            program[pointer] = math.floor(register[x+1] / 100)
-            program[pointer+1] = math.floor((register[x+1] / 10) % 10)
-            program[pointer+2] = register[x+1] % 10
+            program[pointer+1] = math.floor(register[x+1] / 100)
+            program[pointer+2] = math.floor((register[x+1] / 10) % 10)
+            program[pointer+3] = register[x+1] % 10
 
         elseif c == 0x55 then
             for i=0,x do
-                program[pointer+i]=register[i+1]
+                program[pointer+i+1]=register[i+1]
             end
 
         elseif c == 0x65 then
             for i=0,x do
-                register[i+1]=program[pointer+i]
+                register[i+1]=program[pointer+i+1]
             end
 
         end
