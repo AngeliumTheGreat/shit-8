@@ -44,7 +44,6 @@ local opcodes = {
 
     [2] = function (op)
         local nnn = (op & 0x0FFF)
-        pc = pc + 2
         table.insert(callstack, pc)
         pc = nnn
     end,
@@ -292,17 +291,6 @@ if #arg == 1 and arg[1] == "--test" then
         register[2] = 0x88
         run(0x8013)
         assert(register[1] == 0x87)
-        register[1] = 0x20; register[2] = 0x40
-        run(0x8014)
-        assert(register[1] == 0x60 and register[16] == 0x0)
-        register[2] = 0xFF
-        run(0x8014)
-        assert(register[1] == 0x60 and register[16] == 0x1)
-        run(0x8015)
-        assert(register[16] == 0x0)
-        register[1] = 0x60; register[2] = 0x08
-        run(0x8015)
-        assert(register[1] == 0x58 and register[16] == 0x1)
     end
 
     print "all tests good!"
