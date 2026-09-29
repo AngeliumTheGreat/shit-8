@@ -136,12 +136,12 @@ local opcodes = {
 
     [0xA] = function (op)
         local nnn = (op & 0x0FFF)
-        pc = nnn
+        pointer = nnn
     end,
 
     [0xB] = function (op)
         local nnn = (op & 0x0FFF)
-        pointer = nnn + register[1]
+        pc = nnn + register[1]
     end,
 
     [0xC] = function (op)
@@ -196,7 +196,8 @@ if #arg == 1 and arg[1] == "--test" then
     pc = 0
     run(0x1420)
     assert(pc == 0x420)
-    -- 3XNN, 4XNN, 5XY0
+
+    -- 3XNN, 4XNN, 5XY0, 9XY0
     do
         pc = 4
         register[4] = 0x33
@@ -214,6 +215,10 @@ if #arg == 1 and arg[1] == "--test" then
         assert(pc == 8 and register[8] == 0xF and register[9] == 0xF)
         run(0x5870)
         assert(pc == 10)
+        run(0x9870)
+        assert(pc == 10)
+        run(0x9830)
+        assert(pc == 12)
     end
 
     -- 00EE, 2NNN
@@ -227,6 +232,23 @@ if #arg == 1 and arg[1] == "--test" then
         assert(pc == 0x202)
         assert(#callstack == callstack_size - 1)
     end
+
+    -- 6XNN
+    register[2] = 0x40
+    run(0x6150)
+    assert(register[2] == 0x50)
+
+    -- ANNN
+    run(0xA123)
+    assert(pointer == 0x123)
+    run(0xA321)
+    assert(pointer == 0x321)
+
+    -- BNNN
+    pc = 0x12
+    register[1] = 0x4
+    run(0xB200)
+    assert(pc == 0x204)
 
     os.exit()
 end
