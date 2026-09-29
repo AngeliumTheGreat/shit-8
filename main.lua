@@ -97,7 +97,7 @@ local opcodes = {
             register[x+1] = register[x+1] & register[y+1]
 
         elseif c == 3 then
-            register[x+1] = register[x+1] ^ register[y+1]
+            register[x+1] = register[x+1] ~ register[y+1]
 
         elseif c == 4 then
             if register[x+1] + register[y+1] > 0xFF then 
@@ -265,6 +265,22 @@ if #arg == 1 and arg[1] == "--test" then
     run(0x72FF)
     assert(register[3] <= 0xFF)
 
+    -- 8XY0, 8XY1, 8XY2, 8XY3, 8XY4, 8XY5, 8XY6, 8XY7, 8XYE
+    do
+        register[1] = 0x0; register[2] = 0xFF
+        run(0x8010)
+        assert(register[1] == 0xFF)
+        register[1] = 0xF0; register[2] = 0x0F
+        run(0x8011)
+        assert(register[1] == 0xFF)
+        run(0x8012)
+        assert(register[1] == 0x0F)
+        register[2] = 0x88
+        run(0x8013)
+        assert(register[1] == 0x87)
+    end
+
+    print "all tests good!"
     os.exit()
 end
 
