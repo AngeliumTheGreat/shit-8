@@ -218,6 +218,17 @@ if #arg == 1 and arg[1] == "--test" then
         assert(pc == 10)
     end
 
+    -- 00EE, 2NNN
+    do
+        pc = 0x200
+        run(0x2300)
+        assert(pc == 0x300)
+        local callstack_size = #callstack
+        assert(callstack[#callstack] == 0x202)
+        run(0x00EE)
+        assert(pc == 0x202)
+        assert(#callstack == callstack_size - 1)
+    end
 
     os.exit()
 end
