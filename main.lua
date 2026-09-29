@@ -107,11 +107,8 @@ local opcodes = {
             register[x+1] = (register[x+1] + register[y+1]) % 256
 
         elseif c == 5 then
-            if register[x+1] - register[y+1] < 0 then 
-                register[16]=0
-                else register[16]=1
-            end
-            register[x+1] = (register[x+1] - register[y+1]) % 256
+            register[16] = register[x+1] - register[y+1] < 0 and 0 or 1
+            register[x+1] = (register[x+1] - register[y+1]) & 0xFF
 
         elseif c == 6 then
             register[16] = register[x+1] & 0x1
