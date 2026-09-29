@@ -300,6 +300,6 @@ end
 
 while true do
     local op = (program[pc + 1] << 8) + program[pc + 2]
-    opcodes[(op & 0xF000) >> 12](op)
     pc = pc+2
+    opcodes[(op & 0xF000) >> 12](op)
 end
