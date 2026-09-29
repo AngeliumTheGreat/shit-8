@@ -104,7 +104,7 @@ local opcodes = {
                 register[16]=1
                 else register[16]=0
             end
-            register[x+1] = (register[x+1] + register[y+1]) % 256
+            register[x+1] = (register[x+1] + register[y+1]) % 0xFF
 
         elseif c == 5 then
             register[16] = register[x+1] - register[y+1] < 0 and 0 or 1
@@ -115,12 +115,14 @@ local opcodes = {
             register[x+1] = register[x+1] >> 1
 
         elseif c == 7 then
-            register[x+1] = register[y+1] - register[x+1]
-            register[16] = register[x+1] < 0 and 0 or 1
-            register[x+1] = register[x+1] & 0xFF
+            if (register[y+1] - register[x+1] < 0) then
+                register[16]=0
+                else register[16]=1
+            end
+            register[x+1] = (register[y+1] - register[x+1]) % 0xFF
             
         elseif c == 0xE then
-            register[16] = (register[x+1] & 0x8000) >> 15
+            register[16] = (register[x+1] & 0x80) >> 15
             register[x+1] = register[x+1] << 1
 
         end
@@ -172,9 +174,9 @@ local opcodes = {
             -- IMPLEMENT
 
         elseif c == 0x33 then
-            program[pointer] = math.floor(pointer[16] / 100)
-            program[pointer+1] = math.floor((pointer[16] / 10) % 10)
-            program[pointer+2] = pointer[16] % 10
+            program[pointer] = math.floor(register[16] / 100)
+            program[pointer+1] = math.floor((register[16] / 10) % 10)
+            program[pointer+2] = register[16] % 10
 
         elseif c == 0x55 then
             for i=0,x do

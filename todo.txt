@@ -1,6 +1,4 @@
 - loading program in memory
-# main VM loop
-# registers and program counter
 - display
 - input
 - sound
