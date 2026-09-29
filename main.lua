@@ -124,7 +124,6 @@ local opcodes = {
         elseif c == 0xE then
             register[16] = (register[x+1] & 0x8000) >> 15
             register[x+1] = register[x+1] << 1
-            -- important: fuck
 
         end
     end,
@@ -158,22 +157,35 @@ local opcodes = {
         local c = (op & 0x00FF)
         if c == 0x07 then
             register[x+1] = delay_timer
+
         elseif c == 0x0A then
             -- IMPLEMENT
+
         elseif c == 0x15 then
             delay_timer = register[x+1]
+
         elseif c == 0x18 then
             sound_timer = register[x+1]
+
         elseif c == 0x1E then
             pointer = pointer + register[x+1]
+
         elseif c == 0x29 then
             -- IMPLEMENT
+
         elseif c == 0x33 then
             -- IMPLEMENT
+
         elseif c == 0x55 then
-            -- IMPLEMENT
+            for i=0,x do
+                program[pointer+i]=register[i+1]
+            end
+
         elseif c == 0x65 then
-            -- IMPLEMENT
+            for i=0,x do
+                register[i+1]=program[pointer+i]
+            end
+            
         end
     end
 }

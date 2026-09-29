@@ -17,5 +17,3 @@ OPCODES
 - FX0A
 - FX29
 - FX33
-- FX55
-- FX65
