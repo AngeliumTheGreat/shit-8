@@ -174,9 +174,9 @@ local opcodes = {
             -- IMPLEMENT
 
         elseif c == 0x33 then
-            program[pointer] = math.floor(register[16] / 100)
-            program[pointer+1] = math.floor((register[16] / 10) % 10)
-            program[pointer+2] = register[16] % 10
+            program[pointer] = math.floor(register[x+1] / 100)
+            program[pointer+1] = math.floor((register[x+1] / 10) % 10)
+            program[pointer+2] = register[x+1] % 10
 
         elseif c == 0x55 then
             for i=0,x do
