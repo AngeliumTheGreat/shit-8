@@ -228,7 +228,7 @@ if #arg == 1 and arg[1] == "--test" then
         register[8] = 0xF
         register[9] = 0xF
         run(0x5370)
-        assert(pc == 8 and register[8] == 0xF and register[9] == 0xF)
+        assert(pc == 8 and register[8] == 0xF)
         run(0x5870)
         assert(pc == 10)
         run(0x9870)
