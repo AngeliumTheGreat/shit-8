@@ -44,6 +44,7 @@ local opcodes = {
 
     [2] = function (op)
         local nnn = (op & 0x0FFF)
+        pc = pc + 2
         table.insert(callstack, pc)
         pc = nnn
     end,
@@ -299,6 +300,6 @@ end
 
 while true do
     local op = (program[pc + 1] << 8) + program[pc + 2]
-    pc = pc+2
+    pc = pc + 2
     opcodes[(op & 0xF000) >> 12](op)
 end
