@@ -30,7 +30,7 @@ local opcodes = {
         elseif op == 0x00E0 then
             -- IMPLEMENT: clear screen
         else
-            -- IMPLEMENT: call machine code routine silly shit
+            -- literally do nothing; this operation is defunct on modern systems
         end
     end,
 
@@ -121,6 +121,7 @@ local opcodes = {
             register[x+1] = register[y+1] - register[x+1]
             register[16] = register[x+1] < 0 and 0 or 1
             register[x+1] = register[x+1] & 0xFF
+            
         elseif c == 0xE then
             register[16] = (register[x+1] & 0x8000) >> 15
             register[x+1] = register[x+1] << 1
@@ -185,7 +186,7 @@ local opcodes = {
             for i=0,x do
                 register[i+1]=program[pointer+i]
             end
-            
+
         end
     end
 }
