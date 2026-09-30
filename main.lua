@@ -48,6 +48,9 @@ local opcodes = {
     [2] = function (op)
         local nnn = (op & 0x0FFF)
         table.insert(callstack, pc)
+        if #callstack >= 16 then
+            error("stack overflow")
+        end
         pc = nnn
     end,
 
