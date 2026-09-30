@@ -24,6 +24,15 @@ local sound_timer = 0
 -- vf is funky
 local VF = 0xF
 
+-- screen
+local screen = {}
+for x = 1, 64 do
+    screen[x] = {}
+    for y = 1, 32 do
+        screen[x][y] = 0
+    end
+end
+
 -- opcodes
 local opcodes = {
     [0] = function (op)
@@ -34,7 +43,11 @@ local opcodes = {
             pc = callstack[#callstack]
             table.remove(callstack,#callstack)
         elseif op == 0x00E0 then
-            -- IMPLEMENT: clear screen
+            for x = 1, 64 do
+                for y = 1, 32 do
+                    screen[x][y] = 0
+                end
+            end
         else
             -- literally do nothing; this operation is defunct on modern systems
         end

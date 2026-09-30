@@ -5,7 +5,6 @@
 - timers
 
 OPCODES
-- 00E0, clear screen
 - DXYN, draw sprite on screen
 - EX9E, skip next instruction if key is pressed
 - EXA1, skip next instruction if key is not pressed
