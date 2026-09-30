@@ -250,9 +250,11 @@ local opcodes = {
 
         elseif c == 0x0A then
             while true do
+                io.stdin:read "*a"
                 local key = sys.readansi(math.huge)
                 if keycodes[key] then
                     register[x] = keycodes[key]
+                    io.stdin:read "*a"
                     break
                 end
             end
