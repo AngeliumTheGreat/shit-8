@@ -234,7 +234,7 @@ if #arg == 1 and arg[1] == "--test" then
     local function run(op) return opcodes[(op & 0xF000) >> 12](op) end
 
     -- 1NNN
-    pc = 0
+    pc = 0  -- set pc
     run(0x1420)
     assert(pc == 0x420)
 
@@ -242,66 +242,66 @@ if #arg == 1 and arg[1] == "--test" then
     do
         pc = 4
         register[4] = 0x33
-        run(0x3333)
+        run(0x3333)     -- increment pc if V3 is 0x33. should
         assert(pc == 6 and register[4] == 0x33)
-        run(0x3320)
+        run(0x3320)     -- increment pc if V3 is 0x20. shouldn't
         assert(pc == 6)
-        run(0x4333)
+        run(0x4333)     -- increment pc if V3 isn't 0x33. shouldn't
         assert(pc == 6 and register[4] == 0x33)
-        run(0x4320)
+        run(0x4320)     -- increment pc if V3 isn't 0x20. should
         assert(pc == 8)
         register[8] = 0xF
         register[9] = 0xF
-        run(0x5370)
+        run(0x5370)     -- increment pc if V3 and V7 are equal. shouldn't
         assert(pc == 8 and register[8] == 0xF)
-        run(0x5870)
+        run(0x5870)     -- increment pc if V8 and V7 are equal. should
         assert(pc == 10)
-        run(0x9870)
+        run(0x9870)     -- increment pc if V8 and V7 are unequal. shouldn't
         assert(pc == 10)
-        run(0x9830)
+        run(0x9830)     -- increment pc if V8 and V3 are unequal. should
         assert(pc == 12)
     end
 
     -- 00EE, 2NNN
     do
         pc = 0x200
-        run(0x2300)
+        run(0x2300)     -- call subroutine. should change pc and add to the callstack
         assert(pc == 0x300)
         local callstack_size = #callstack
-        assert(callstack[#callstack] == 0x202)
-        run(0x00EE)
-        assert(pc == 0x202)
+        assert(callstack[#callstack] == 0x200)
+        run(0x00EE)     -- return from subroutine. should change pc and remove from the callstack
+        assert(pc == 0x200)
         assert(#callstack == callstack_size - 1)
     end
 
     -- 6XNN
-    register[2] = 0x40
+    register[2] = 0x40  -- set V1 to 0x50
     run(0x6150)
     assert(register[2] == 0x50)
 
     -- ANNN
-    run(0xA123)
+    run(0xA123)     -- set I to 0x123
     assert(pointer == 0x123)
-    run(0xA321)
+    run(0xA321)     -- set I to 0x321
     assert(pointer == 0x321)
 
     -- BNNN
     pc = 0x12
     register[1] = 0x4
-    run(0xB200)
+    run(0xB200)     -- set pc to 0x200 + V0
     assert(pc == 0x204)
 
     -- CXNN
     for i=1, 100 do
-        run(0xC40F)
+        run(0xC40F) -- set V4 to a random number & 0xF0
         assert(register[5] & 0xF0 == 0)
     end
 
     -- 7XNN
     register[3] = 0xD0
-    run(0x7208)
+    run(0x7208) -- add 0x08 to V2
     assert(register[3] == 0xD8)
-    run(0x72FF)
+    run(0x72FF) -- add 0xFF to V2
     assert(register[3] <= 0xFF)
 
     -- 8XY0, 8XY1, 8XY2, 8XY3, 8XY4, 8XY5, 8XY6, 8XY7, 8XYE
