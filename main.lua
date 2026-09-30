@@ -208,11 +208,26 @@ local opcodes = {
         register[x] = math.random(0, 255) & nn
     end,
 
-    [0xD] = function (op)
-        local x = (op & 0x0F00) >> 8
-        local y = (op & 0x00F0) >> 4
-        local n = (op & 0x000F)
-        -- IMPLEMENT: draw sprite
+    [0xD] = function(op)
+        local x = register[(op & 0x0F00) >> 8]
+        local y = register[(op & 0x00F0) >> 4]
+        local n = op & 0x000F
+        register[0xF] = 0
+
+        for i = 0, n - 1 do
+            for j = 0, 7 do
+                local px = (x + j) % 64
+                local py = (y + i) % 32
+
+                local bit = (program[pointer + i] >> (7 - j)) & 1
+
+                if screen[px][py] == 1 and bit == 1 then
+                    register[0xF] = 1
+                end
+
+                screen[px][py] = screen[px][py] ~ bit
+            end
+        end
     end,
 
     [0xE] = function (op)
@@ -223,7 +238,7 @@ local opcodes = {
 
         elseif c == 0xA1 then
             -- IMPLEMENT: key press stuff
-        
+
         else error("invalid EXNN instruction") end
     end,
 
