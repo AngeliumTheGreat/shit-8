@@ -1,12 +1,12 @@
 -- placeholder program, add file loading of program in here later
 local program = {0x61,0x23}
-for i=1,4096 do
+for i=0,4095 do
     program[i]=(program[i] or 0)
 end
 
 -- variable registers
 local register = {}
-for i=1,16 do
+for i=0,0xF do
     register[i]=(register[i] or 0)
 end
 
@@ -22,7 +22,7 @@ local delay_timer = 0
 local sound_timer = 0
 
 -- vf is funky
-local VF = 16
+local VF = 0xF
 
 -- opcodes
 local opcodes = {
@@ -57,7 +57,7 @@ local opcodes = {
     [3] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        if register[x+1] == nn then
+        if register[x] == nn then
             pc = pc + 2
         end
     end,
@@ -65,7 +65,7 @@ local opcodes = {
     [4] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        if register[x+1] ~= nn then
+        if register[x] ~= nn then
             pc = pc + 2
         end
     end,
@@ -76,7 +76,7 @@ local opcodes = {
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
-        if register[x+1] == register[y+1] then
+        if register[x] == register[y] then
             pc = pc + 2
         end
     end,
@@ -84,13 +84,13 @@ local opcodes = {
     [6] = function(op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        register[x+1]=nn
+        register[x]=nn
     end,
 
     [7] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        register[x+1]= (register[x+1]+nn) & 0xFF
+        register[x]= (register[x]+nn) & 0xFF
     end,
 
     [8] = function (op)
@@ -99,45 +99,45 @@ local opcodes = {
         local c = (op & 0x000F)
 
         if c == 0 then
-            register[x+1] = register[y+1]
+            register[x] = register[y]
 
         elseif c == 1 then
-            register[x+1] = register[x+1] | register[y+1]
+            register[x] = register[x] | register[y]
 
         elseif c == 2 then
-            register[x+1] = register[x+1] & register[y+1]
+            register[x] = register[x] & register[y]
 
         elseif c == 3 then
-            register[x+1] = register[x+1] ~ register[y+1]
+            register[x] = register[x] ~ register[y]
 
         elseif c == 4 then
-            if register[x+1] + register[y+1] > 0xFF then 
+            if register[x] + register[y] > 0xFF then 
                 register[VF]=1
                 else register[VF]=0
             end
-            register[x+1] = (register[x+1] + register[y+1]) % 256
+            register[x] = (register[x] + register[y]) % 256
 
         elseif c == 5 then
-            if register[x+1] - register[y+1] < 0 then 
+            if register[x] - register[y] < 0 then
                 register[VF]=0
                 else register[VF]=1
             end
-            register[x+1] = (register[x+1] - register[y+1]) % 256
+            register[x] = (register[x] - register[y]) % 256
 
         elseif c == 6 then
-            register[VF] = register[x+1] & 0x1
-            register[x+1] = register[x+1] >> 1
+            register[VF] = register[x] & 0x1
+            register[x] = register[x] >> 1
 
         elseif c == 7 then
-            if (register[y+1] - register[x+1] < 0) then
+            if (register[y] - register[x] < 0) then
                 register[VF]=0
                 else register[VF]=1
             end
-            register[x+1] = (register[y+1] - register[x+1]) % 256
+            register[x] = (register[y] - register[x]) % 256
 
         elseif c == 0xE then
-            register[VF] = (register[x+1] & 0x80) >> 7
-            register[x+1] = (register[x+1] << 1) & 0xFF
+            register[VF] = (register[x] & 0x80) >> 7
+            register[x] = (register[x] << 1) & 0xFF
 
         else error("invalid 8XYN instruction")
 
@@ -150,7 +150,7 @@ local opcodes = {
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
-        if register[x+1] ~= register[y+1] then
+        if register[x] ~= register[y] then
             pc = pc + 2
         end
     end,
@@ -162,13 +162,13 @@ local opcodes = {
 
     [0xB] = function (op)
         local nnn = (op & 0x0FFF)
-        pc = nnn + register[1]
+        pc = nnn + register[0]
     end,
 
     [0xC] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        register[x+1] = math.random(0, 255) & nn
+        register[x] = math.random(0, 255) & nn
     end,
 
     [0xD] = function (op)
@@ -194,36 +194,36 @@ local opcodes = {
         local x = (op & 0x0F00) >> 8
         local c = (op & 0x00FF)
         if c == 0x07 then
-            register[x+1] = delay_timer
+            register[x] = delay_timer
 
         elseif c == 0x0A then
             -- IMPLEMENT: getkey
 
         elseif c == 0x15 then
-            delay_timer = register[x+1]
+            delay_timer = register[x]
 
         elseif c == 0x18 then
-            sound_timer = register[x+1]
+            sound_timer = register[x]
 
         elseif c == 0x1E then
-            pointer = pointer + register[x+1]
+            pointer = pointer + register[x]
 
         elseif c == 0x29 then
             -- IMPLEMENT: sprite char pointer thing
 
         elseif c == 0x33 then
-            program[pointer+1] = math.floor(register[x+1] / 100) % 10
-            program[pointer+2] = math.floor((register[x+1] / 10) % 10)
-            program[pointer+3] = register[x+1] % 10
+            program[pointer] = math.floor(register[x] / 100) % 10
+            program[pointer+1] = math.floor((register[x] / 10) % 10)
+            program[pointer+2] = register[x] % 10
 
         elseif c == 0x55 then
             for i=0,x do
-                program[pointer+i+1]=register[i+1]
+                program[pointer+i]=register[i]
             end
 
         elseif c == 0x65 then
             for i=0,x do
-                register[i+1]=program[pointer+i+1]
+                register[i]=program[pointer+i]
             end
 
         else error("invalid FXNN instruction")
@@ -244,19 +244,19 @@ if #arg == 1 and arg[1] == "--test" then
     -- 3XNN, 4XNN, 5XY0, 9XY0
     do
         pc = 4
-        register[4] = 0x33
+        register[3] = 0x33
         run(0x3333)     -- increment pc if V3 is 0x33. should
-        assert(pc == 6 and register[4] == 0x33)
+        assert(pc == 6 and register[3] == 0x33)
         run(0x3320)     -- increment pc if V3 is 0x20. shouldn't
         assert(pc == 6)
         run(0x4333)     -- increment pc if V3 isn't 0x33. shouldn't
-        assert(pc == 6 and register[4] == 0x33)
+        assert(pc == 6 and register[3] == 0x33)
         run(0x4320)     -- increment pc if V3 isn't 0x20. should
         assert(pc == 8)
+        register[7] = 0xF
         register[8] = 0xF
-        register[9] = 0xF
         run(0x5370)     -- increment pc if V3 and V7 are equal. shouldn't
-        assert(pc == 8 and register[8] == 0xF)
+        assert(pc == 8 and register[7] == 0xF)
         run(0x5870)     -- increment pc if V8 and V7 are equal. should
         assert(pc == 10)
         run(0x9870)     -- increment pc if V8 and V7 are unequal. shouldn't
@@ -278,9 +278,9 @@ if #arg == 1 and arg[1] == "--test" then
     end
 
     -- 6XNN
-    register[2] = 0x40  -- set V1 to 0x50
+    register[1] = 0x40  -- set V1 to 0x50
     run(0x6150)
-    assert(register[2] == 0x50)
+    assert(register[1] == 0x50)
 
     -- ANNN
     run(0xA123)     -- set I to 0x123
@@ -290,36 +290,36 @@ if #arg == 1 and arg[1] == "--test" then
 
     -- BNNN
     pc = 0x12
-    register[1] = 0x4
+    register[0] = 0x4
     run(0xB200)     -- set pc to 0x200 + V0
     assert(pc == 0x204)
 
     -- CXNN
     for i=1, 100 do
         run(0xC40F) -- set V4 to a random number & 0xF0
-        assert(register[5] & 0xF0 == 0)
+        assert(register[4] & 0xF0 == 0)
     end
 
     -- 7XNN
-    register[3] = 0xD0
+    register[2] = 0xD0
     run(0x7208) -- add 0x08 to V2
-    assert(register[3] == 0xD8)
+    assert(register[2] == 0xD8)
     run(0x72FF) -- add 0xFF to V2
-    assert(register[3] <= 0xFF)
+    assert(register[2] <= 0xFF)
 
     -- 8XY0, 8XY1, 8XY2, 8XY3, 8XY4, 8XY5, 8XY6, 8XY7, 8XYE
     do
-        register[1] = 0x0; register[2] = 0xFF
+        register[0] = 0x0; register[1] = 0xFF
         run(0x8010)
-        assert(register[1] == 0xFF)
-        register[1] = 0xF0; register[2] = 0x0F
+        assert(register[0] == 0xFF)
+        register[0] = 0xF0; register[1] = 0x0F
         run(0x8011)
-        assert(register[1] == 0xFF)
+        assert(register[0] == 0xFF)
         run(0x8012)
-        assert(register[1] == 0x0F)
-        register[2] = 0x88
+        assert(register[0] == 0x0F)
+        register[1] = 0x88
         run(0x8013)
-        assert(register[1] == 0x87)
+        assert(register[0] == 0x87)
     end
 
     print "all tests good!"
@@ -327,7 +327,7 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
-    local op = (program[pc + 1] << 8) + program[pc + 2]
+    local op = (program[pc] << 8) + program[pc + 1]
     pc = pc + 2
     opcodes[(op & 0xF000) >> 12](op)
 end
