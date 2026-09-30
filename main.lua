@@ -1,3 +1,5 @@
+local sys = require "system"
+
 -- placeholder program, add file loading of program in here later
 local program = {0x61,0x23}
 for i=0,4095 do
@@ -32,6 +34,28 @@ for x = 1, 64 do
         screen[x][y] = 0
     end
 end
+
+-- array of keys for 0 to F
+local keycodes = {
+    ["0"] = 0, ["1"] = 1, ["2"] = 2, ["3"] = 3,
+    ["4"] = 4, ["5"] = 5, ["6"] = 6, ["7"] = 7,
+    ["8"] = 8, ["9"] = 9, ["a"] = 10, ["b"] = 11,
+    ["c"] = 12, ["d"] = 13, ["e"] = 14, ["f"] = 15,
+}
+
+-- setup Windows console to handle ANSI processing
+local of_in = sys.getconsoleflags(io.stdin)
+local of_out = sys.getconsoleflags(io.stdout)
+sys.setconsoleflags(io.stdout, sys.getconsoleflags(io.stdout) + sys.COF_VIRTUAL_TERMINAL_PROCESSING)
+sys.setconsoleflags(io.stdin, sys.getconsoleflags(io.stdin) + sys.CIF_VIRTUAL_TERMINAL_INPUT)
+
+-- setup Posix terminal to use non-blocking mode, and disable line-mode
+local of_attr = sys.tcgetattr(io.stdin)
+local of_block = sys.getnonblock(io.stdin)
+sys.setnonblock(io.stdin, true)
+sys.tcsetattr(io.stdin, sys.TCSANOW, {
+    lflag = of_attr.lflag - sys.L_ICANON - sys.L_ECHO, -- disable canonical mode and echo
+})
 
 -- opcodes
 local opcodes = {
@@ -210,7 +234,13 @@ local opcodes = {
             register[x] = delay_timer
 
         elseif c == 0x0A then
-            -- IMPLEMENT: getkey
+            while true do
+                local key = sys.readansi(math.huge)
+                if keycodes[key] then
+                    register[x] = keycodes[key]
+                    break
+                end
+            end
 
         elseif c == 0x15 then
             delay_timer = register[x]
@@ -334,6 +364,12 @@ if #arg == 1 and arg[1] == "--test" then
         run(0x8013)
         assert(register[0] == 0x87)
     end
+
+    -- FX0A
+    print "for test, press the 3 key"
+    register[3] = 0x0
+    run(0xF30A)
+    assert(register[3] == keycodes["3"])
 
     print "all tests good!"
     os.exit()
