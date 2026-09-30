@@ -168,6 +168,25 @@ local opcodes = {
         register[x+1] = math.random(0, 255) & nn
     end,
 
+    [0xD] = function (op)
+        local x = (op & 0x0F00) >> 8
+        local y = (op & 0x00F0) >> 4
+        local n = (op & 0x000F)
+        -- IMPLEMENT: draw sprite
+    end,
+
+    [0xE] = function (op)
+        local x = (op & 0x0F00) >> 8
+        local c = (op & 0x00FF)
+        if c == 0x9E then
+            -- IMPLEMENT: key press stuff
+
+        elseif c == 0xA1 then
+            -- IMPLEMENT: key press stuff
+        
+        else error("invalid EXNN instruction") end
+    end,
+
     [0xF] = function (op)
         local x = (op & 0x0F00) >> 8
         local c = (op & 0x00FF)
@@ -175,7 +194,7 @@ local opcodes = {
             register[x+1] = delay_timer
 
         elseif c == 0x0A then
-            -- IMPLEMENT
+            -- IMPLEMENT: getkey
 
         elseif c == 0x15 then
             delay_timer = register[x+1]
@@ -187,7 +206,7 @@ local opcodes = {
             pointer = pointer + register[x+1]
 
         elseif c == 0x29 then
-            -- IMPLEMENT
+            -- IMPLEMENT: sprite char pointer thing
 
         elseif c == 0x33 then
             program[pointer+1] = math.floor(register[x+1] / 100) % 10
