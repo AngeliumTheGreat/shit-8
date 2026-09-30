@@ -1,7 +1,7 @@
 -- placeholder program, add file loading of program in here later
-local memory = {0x61,0x23}
+local program = {0x61,0x23}
 for i=1,4096 do
-    memory[i]=(memory[i] or 0)
+    program[i]=(program[i] or 0)
 end
 
 -- variable registers
@@ -22,26 +22,7 @@ local delay_timer = 0
 local sound_timer = 0
 
 -- vf is funky
-local VF = 0xF
-
--- helper functions for accessing registers and memory
-local function get_reg(n)
-    return register[n + 1]
-end
-
-local function set_reg(n, v)
-    assert(0 <= v and v <= 0xFF, "register value out of range")
-    register[n + 1] = v
-end
-
-local function get_mem(n)
-    return memory[n + 1]
-end
-
-local function set_mem(n, v)
-    assert(0 <= v and v <= 0xFF, "memory value out of range")
-    memory[n + 1] = v
-end
+local VF = 16
 
 -- opcodes
 local opcodes = {
@@ -76,7 +57,7 @@ local opcodes = {
     [3] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        if get_reg(x) == nn then
+        if register[x+1] == nn then
             pc = pc + 2
         end
     end,
@@ -84,7 +65,7 @@ local opcodes = {
     [4] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        if get_reg(x) ~= nn then
+        if register[x+1] ~= nn then
             pc = pc + 2
         end
     end,
@@ -95,7 +76,7 @@ local opcodes = {
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
-        if get_reg(x) == get_reg(y) then
+        if register[x+1] == register[y+1] then
             pc = pc + 2
         end
     end,
@@ -103,13 +84,13 @@ local opcodes = {
     [6] = function(op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        set_reg(x, nn)
+        register[x+1]=nn
     end,
 
     [7] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        set_reg(x, (get_reg(x)+nn) & 0xFF)
+        register[x+1]= (register[x+1]+nn) & 0xFF
     end,
 
     [8] = function (op)
@@ -118,45 +99,45 @@ local opcodes = {
         local c = (op & 0x000F)
 
         if c == 0 then
-            set_reg(x, get_reg(y))
+            register[x+1] = register[y+1]
 
         elseif c == 1 then
-            set_reg(x, get_reg(x) | get_reg(y))
+            register[x+1] = register[x+1] | register[y+1]
 
         elseif c == 2 then
-            set_reg(x, get_reg(x) & get_reg(y))
+            register[x+1] = register[x+1] & register[y+1]
 
         elseif c == 3 then
-            set_reg(x, get_reg(x) ~ get_reg(y))
+            register[x+1] = register[x+1] ~ register[y+1]
 
         elseif c == 4 then
-            if get_reg(x) + get_reg(y) > 0xFF then
-                set_reg(VF, 0x1)
-                else set_reg(VF, 0x0)
+            if register[x+1] + register[y+1] > 0xFF then 
+                register[VF]=1
+                else register[VF]=0
             end
-            set_reg(x, (get_reg(x) + get_reg(y)) % 256)
+            register[x+1] = (register[x+1] + register[y+1]) % 256
 
         elseif c == 5 then
-            if get_reg(x) - get_reg(y) < 0 then
-                set_reg(VF, 0x0)
-                else set_reg(VF, 0x1)
+            if register[x+1] - register[y+1] < 0 then 
+                register[VF]=0
+                else register[VF]=1
             end
-            set_reg(x, (get_reg(x) - get_reg(y)) % 256)
+            register[x+1] = (register[x+1] - register[y+1]) % 256
 
         elseif c == 6 then
-            set_reg(VF, get_reg(x) & 0x1)
-            set_reg(x, get_reg(x) >> 1)
+            register[VF] = register[x+1] & 0x1
+            register[x+1] = register[x+1] >> 1
 
         elseif c == 7 then
-            if (get_reg(y) - get_reg(x) < 0) then
-                set_reg(VF, 0x0)
-                else set_reg(VF, 0x1)
+            if (register[y+1] - register[x+1] < 0) then
+                register[VF]=0
+                else register[VF]=1
             end
-            set_reg(x, (get_reg(y) - get_reg(x)) % 256)
+            register[x+1] = (register[y+1] - register[x+1]) % 256
 
         elseif c == 0xE then
-            set_reg(VF, (get_reg(x) & 0x80) >> 7)
-            set_reg(x, (get_reg(x) << 1) & 0xFF)
+            register[VF] = (register[x+1] & 0x80) >> 7
+            register[x+1] = (register[x+1] << 1) & 0xFF
 
         else error("invalid 8XYN instruction")
 
@@ -169,7 +150,7 @@ local opcodes = {
         end
         local x = (op & 0x0F00) >> 8
         local y = (op & 0x00F0) >> 4
-        if get_reg(x) ~= get_reg(y) then
+        if register[x+1] ~= register[y+1] then
             pc = pc + 2
         end
     end,
@@ -181,13 +162,13 @@ local opcodes = {
 
     [0xB] = function (op)
         local nnn = (op & 0x0FFF)
-        pc = nnn + get_reg(0)
+        pc = nnn + register[1]
     end,
 
     [0xC] = function (op)
         local x = (op & 0x0F00) >> 8
         local nn = (op & 0x00FF)
-        set_reg(x, math.random(0, 255) & nn)
+        register[x+1] = math.random(0, 255) & nn
     end,
 
     [0xD] = function (op)
@@ -213,36 +194,36 @@ local opcodes = {
         local x = (op & 0x0F00) >> 8
         local c = (op & 0x00FF)
         if c == 0x07 then
-            set_reg(x, delay_timer)
+            register[x+1] = delay_timer
 
         elseif c == 0x0A then
             -- IMPLEMENT: getkey
 
         elseif c == 0x15 then
-            delay_timer = get_reg(x)
+            delay_timer = register[x+1]
 
         elseif c == 0x18 then
-            sound_timer = get_reg(x)
+            sound_timer = register[x+1]
 
         elseif c == 0x1E then
-            pointer = pointer + get_reg(x)
+            pointer = pointer + register[x+1]
 
         elseif c == 0x29 then
             -- IMPLEMENT: sprite char pointer thing
 
         elseif c == 0x33 then
-            set_mem(pointer, math.floor(get_reg(x) / 100) % 10)
-            set_mem(pointer+1, math.floor((get_reg(x) / 10) % 10))
-            set_mem(pointer+2, get_reg(x) % 10)
+            program[pointer+1] = math.floor(register[x+1] / 100) % 10
+            program[pointer+2] = math.floor((register[x+1] / 10) % 10)
+            program[pointer+3] = register[x+1] % 10
 
         elseif c == 0x55 then
             for i=0,x do
-                set_mem(pointer+i, get_reg(i))
+                program[pointer+i+1]=register[i+1]
             end
 
         elseif c == 0x65 then
             for i=0,x do
-                set_reg(i, get_mem(pointer + i))
+                register[i+1]=program[pointer+i+1]
             end
 
         else error("invalid FXNN instruction")
