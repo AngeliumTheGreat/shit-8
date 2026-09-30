@@ -1,10 +1,18 @@
 local sys = require "system"
 
+io.write("\27[2J") -- clear screen
+io.write("\27[H")  -- cursor home
+io.write("\27[?25l") -- hide cursor
+io.flush()
+
 -- placeholder program, add file loading of program in here later
 local program = {0x61,0x23}
 for i=0,4095 do
     program[i]=(program[i] or 0)
 end
+
+-- start of font sprites
+local font_start = 0x000
 
 -- variable registers
 local register = {}
@@ -28,12 +36,15 @@ local VF = 0xF
 
 -- screen
 local screen = {}
-for x = 1, 64 do
+for x = 0, 63 do
     screen[x] = {}
-    for y = 1, 32 do
+    for y = 0, 31 do
         screen[x][y] = 0
     end
 end
+
+-- screen_dirty, for only drawing the screen when it has changed
+local screen_dirty = false
 
 -- array of keys for 0 to F
 local keycodes = {
@@ -67,8 +78,8 @@ local opcodes = {
             pc = callstack[#callstack]
             table.remove(callstack,#callstack)
         elseif op == 0x00E0 then
-            for x = 1, 64 do
-                for y = 1, 32 do
+            for x = 0, 63 do
+                for y = 0, 31 do
                     screen[x][y] = 0
                 end
             end
@@ -228,6 +239,8 @@ local opcodes = {
                 screen[px][py] = screen[px][py] ~ bit
             end
         end
+
+        screen_dirty = true
     end,
 
     [0xE] = function (op)
@@ -267,7 +280,7 @@ local opcodes = {
             pointer = pointer + register[x]
 
         elseif c == 0x29 then
-            -- IMPLEMENT: sprite char pointer thing
+            pointer = font_start + register[x] * 5
 
         elseif c == 0x33 then
             program[pointer] = math.floor(register[x] / 100) % 10
@@ -289,6 +302,29 @@ local opcodes = {
         end
     end
 }
+
+local function draw_screen()
+    io.write("\27[H") -- cursor to top-left
+
+    local output = {}
+
+    for y = 0, 31 do
+        local row = {}
+
+        for x = 0, 63 do
+            if screen[x][y] == 1 then
+                row[#row + 1] = "██"
+            else
+                row[#row + 1] = "  "
+            end
+        end
+
+        output[#output + 1] = table.concat(row)
+    end
+
+    io.write(table.concat(output, "\n"))
+    io.flush()
+end
 
 -- tests if only arg is --test
 if #arg == 1 and arg[1] == "--test" then
