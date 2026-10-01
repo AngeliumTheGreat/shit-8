@@ -15,12 +15,14 @@ for i=0,4095 do
 end
 
 -- load file 
-local file = assert(io.open(arg[#arg], "rb"))
-local rom = file:read("*a")
-file:close()
+if (#arg>0) and not (arg[1]=="--test") then
+    local file = assert(io.open(arg[#arg], "rb"))
+    local rom = file:read("*a")
+    file:close()
 
-for i = 1, #rom do
-    program[i - 1] = string.byte(rom, i)
+    for i = 1, #rom do
+        program[i - 1] = string.byte(rom, i)
+    end
 end
 
 -- start of font sprites
@@ -84,6 +86,9 @@ for i, v in ipairs(arg) do
         settings[select(3, v:find("%-%-([%w-]+)"))](select(3, v:find("%-%-%w+=(.*)$")))
     end
 end
+
+print(tick_length)
+for k, v in pairs(keycodes) do print(k, v) end
 
 -- setup Windows console to handle ANSI processing
 local of_in = sys.getconsoleflags(io.stdin)
