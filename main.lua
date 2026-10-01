@@ -57,6 +57,8 @@ local keycodes = {
     ["c"] = 12, ["d"] = 13, ["e"] = 14, ["f"] = 15,
 }
 
+local tick_length = 1 / 800
+
 -- setup Windows console to handle ANSI processing
 local of_in = sys.getconsoleflags(io.stdin)
 local of_out = sys.getconsoleflags(io.stdout)
@@ -448,4 +450,5 @@ while true do
     local op = (program[pc] << 8) + program[pc + 1]
     pc = pc + 2
     opcodes[(op & 0xF000) >> 12](op)
+    sys.sleep(tick_length)
 end
