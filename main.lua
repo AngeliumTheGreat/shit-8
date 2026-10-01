@@ -78,6 +78,8 @@ local settings = {
     end,
 }
 
+setmetatable(settings, { __index = function() return function() end end })
+
 -- get config from args
 for i, v in ipairs(arg) do
     if v:sub(1, 2) == "--" then
