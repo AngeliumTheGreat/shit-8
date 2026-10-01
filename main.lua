@@ -468,23 +468,29 @@ if #arg == 1 and arg[1] == "--test" then
         assert(register[0] == 0x87)
     end
 
-    -- FX07 and FX15
-    register[3] = 120; register[4] = 0
-    run(0xF315)
-    run(0xF407)
-    assert(register[4] == 120)
-    sys.sleep(1)
-    run(0xF407)
-    assert(register[4] == 60)
-    sys.sleep(0.001)
-    run(0xF407)
-    assert(register[4] == 60)
-
     -- FX0A
     print "for test, press the 3 key"
     register[3] = 0x0
     run(0xF30A)
     assert(register[3] == keycodes["3"])
+
+    -- FX07 and FX15
+    register[3] = 120; register[4] = 0
+    run(0xF315) -- set timer to 120
+    run(0xF407)
+    assert(register[4] == 120)  -- immediately, timer is 120
+    sys.sleep(1)
+    run(0xF407)
+    assert(register[4] == 60)   -- wait 1s, timer is 60
+    sys.sleep(0.001)
+    run(0xF407)
+    assert(register[4] == 60)   -- wait 1ms, timer is still 60
+    sys.sleep(20/60)
+    run(0xF407)
+    assert(register[4] == 40)   -- wait 333ms, timer is 40
+    sys.sleep(1)
+    run(0xF407)
+    assert(register[4] == 0)    -- wait 1s, timer is 0 (never negative)
 
     print "all tests good!"
     os.exit()
