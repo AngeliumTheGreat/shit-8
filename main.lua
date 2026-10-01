@@ -43,6 +43,7 @@ local callstack = {}
 
 -- timers
 local delay_timer = 0
+local delay_timer_set_time = 0
 local sound_timer = 0
 
 -- vf is funky
@@ -306,7 +307,8 @@ local opcodes = {
         local x = (op & 0x0F00) >> 8
         local c = (op & 0x00FF)
         if c == 0x07 then
-            register[x] = delay_timer
+            local delta = sys.monotime() - delay_timer_set_time
+            register[x] = math.max(delay_timer - math.floor(delta * 60), 0)
 
         elseif c == 0x0A then
             while true do
@@ -321,6 +323,7 @@ local opcodes = {
 
         elseif c == 0x15 then
             delay_timer = register[x]
+            delay_timer_set_time = sys.monotime()
 
         elseif c == 0x18 then
             sound_timer = register[x]
@@ -464,6 +467,18 @@ if #arg == 1 and arg[1] == "--test" then
         run(0x8013)
         assert(register[0] == 0x87)
     end
+
+    -- FX07 and FX15
+    register[3] = 120; register[4] = 0
+    run(0xF315)
+    run(0xF407)
+    assert(register[4] == 120)
+    sys.sleep(1)
+    run(0xF407)
+    assert(register[4] == 60)
+    sys.sleep(0.001)
+    run(0xF407)
+    assert(register[4] == 60)
 
     -- FX0A
     print "for test, press the 3 key"
