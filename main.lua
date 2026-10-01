@@ -11,7 +11,16 @@ local platform = "windows"
 -- placeholder program, add file loading of program in here later
 local program = {0x61,0x23}
 for i=0,4095 do
-    program[i]=(program[i] or 0)
+    program[i] = 0
+end
+
+-- load file 
+local file = assert(io.open(arg[#arg], "rb"))
+local rom = file:read("*a")
+file:close()
+
+for i = 1, #rom do
+    program[i - 1] = string.byte(rom, i)
 end
 
 -- start of font sprites
