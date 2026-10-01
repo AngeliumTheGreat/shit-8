@@ -5,6 +5,9 @@ io.write("\27[H")  -- cursor home
 io.write("\27[?25l") -- hide cursor
 io.flush()
 
+-- platform
+local platform = "windows" 
+
 -- placeholder program, add file loading of program in here later
 local program = {0x61,0x23}
 for i=0,4095 do
@@ -275,11 +278,11 @@ local opcodes = {
 
         elseif c == 0x0A then
             while true do
-                io.stdin:read "*a"
+                if platform=="linux" then io.stdin:read "*a" end
                 local key = sys.readansi(math.huge)
                 if keycodes[key] then
                     register[x] = keycodes[key]
-                    io.stdin:read "*a"
+                    if platform=="linux" then io.stdin:read "*a" end
                     break
                 end
             end
