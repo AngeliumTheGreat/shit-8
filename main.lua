@@ -89,9 +89,6 @@ for i, v in ipairs(arg) do
     end
 end
 
-print(tick_length)
-for k, v in pairs(keycodes) do print(k, v) end
-
 -- setup Windows console to handle ANSI processing
 local of_in = sys.getconsoleflags(io.stdin)
 local of_out = sys.getconsoleflags(io.stdout)
