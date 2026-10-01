@@ -1,4 +1,3 @@
-- loading program in memory
 - display
 - input
 - sound
