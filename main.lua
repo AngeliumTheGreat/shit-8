@@ -59,6 +59,26 @@ local keycodes = {
 
 local tick_length = 1 / 800
 
+local settings = {
+    frequency = function(v) tick_length = 1 / v end,
+    keys = function(v)
+        keycodes = {}
+        for i=1, 16 do
+           keycodes[v:sub(i, i)] = i - 1
+        end
+    end,
+}
+
+-- get config from args
+for i, v in ipairs(arg) do
+    if v:sub(1, 2) == "--" then
+        settings[select(3, v:find("%-%-([%w-]+)"))](select(3, v:find("%-%-%w+=(.*)$")))
+    end
+end
+
+print(tick_length)
+for k, v in pairs(keycodes) do print(k, v) end
+
 -- setup Windows console to handle ANSI processing
 local of_in = sys.getconsoleflags(io.stdin)
 local of_out = sys.getconsoleflags(io.stdout)
