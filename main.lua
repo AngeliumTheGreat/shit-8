@@ -68,6 +68,16 @@ sys.tcsetattr(io.stdin, sys.TCSANOW, {
     lflag = of_attr.lflag - sys.L_ICANON - sys.L_ECHO, -- disable canonical mode and echo
 })
 
+local key_pressed
+local get_pressed = coroutine.wrap(function()
+    while true do
+        local key = sys.readansi(0)
+        key_pressed = keycodes[key]
+        io.stdin:read "*a"
+        coroutine.yield()
+    end
+end)
+
 -- opcodes
 local opcodes = {
     [0] = function (op)
@@ -247,11 +257,13 @@ local opcodes = {
         local x = (op & 0x0F00) >> 8
         local c = (op & 0x00FF)
         if c == 0x9E then
-            -- IMPLEMENT: key press stuff
-
+            if key_pressed == register[x] then
+                pc = pc + 2
+            end
         elseif c == 0xA1 then
-            -- IMPLEMENT: key press stuff
-
+            if key_pressed ~= register[x] then
+                pc = pc + 2
+            end
         else error("invalid EXNN instruction") end
     end,
 
@@ -429,6 +441,7 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
+    get_pressed()
     local op = (program[pc] << 8) + program[pc + 1]
     pc = pc + 2
     opcodes[(op & 0xF000) >> 12](op)
