@@ -1,11 +1,4 @@
-- display
-- input
-- sound
-- timers
+main things done :3
 
-OPCODES
-- DXYN, draw sprite on screen
-- EX9E, skip next instruction if key is pressed
-- EXA1, skip next instruction if key is not pressed
-- FX0A, getkey
-- FX29, set pointer to location of sprite for char
+- make input better
+- make screen drawing better
