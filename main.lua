@@ -257,6 +257,7 @@ local opcodes = {
             register[VF] = carry
 
         elseif c == 6 then
+            register[x] = register[y]
             carry = register[x] & 0x1
             register[x] = register[x] >> 1
             register[VF] = carry
@@ -270,6 +271,7 @@ local opcodes = {
             register[VF] = carry
 
         elseif c == 0xE then
+            register[x] = register[y]
             carry = (register[x] & 0x80) >> 7
             register[x] = (register[x] << 1) & 0xFF
             register[VF] = carry
@@ -519,12 +521,12 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
-    get_pressed()
-    for i=1, key_interval do
+    -- get_pressed()
+    -- for i=1, key_interval do
         local op = (program[pc] << 8) + program[pc + 1]
         pc = pc + 2
         -- print(string.format("PC=%04X OP=%04X", pc - 2, op))
         opcodes[(op & 0xF000) >> 12](op)
         sys.sleep(tick_length)
-    end
+    -- end
 end
