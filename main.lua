@@ -244,12 +244,15 @@ local opcodes = {
 
         elseif c == 1 then
             register[x] = register[x] | register[y]
+            register[VF] = 0
 
         elseif c == 2 then
             register[x] = register[x] & register[y]
+            register[VF] = 0
 
         elseif c == 3 then
             register[x] = register[x] ~ register[y]
+            register[VF] = 0
 
         elseif c == 4 then
             if register[x] + register[y] > 0xFF then 
@@ -325,12 +328,13 @@ local opcodes = {
 
         for i = 0, n - 1 do
             for j = 0, 7 do
+                
                 local px = (x + j) % 64
                 local py = (y + i) % 32
 
                 local bit = (program[pointer + i] >> (7 - j)) & 1
 
-                if screen[px][py] == 1 and bit == 1 then
+                if screen[px][py] == 1 and bit == 1 and y+i<32 then
                     register[0xF] = 1
                 end
 
@@ -394,11 +398,13 @@ local opcodes = {
             for i=0,x do
                 program[pointer+i]=register[i]
             end
+            pointer = pointer+x+1
 
         elseif c == 0x65 then
             for i=0,x do
                 register[i]=program[pointer+i]
             end
+            pointer = pointer+x+1
 
         else error("invalid FXNN instruction")
 
