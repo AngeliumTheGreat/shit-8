@@ -333,13 +333,12 @@ local opcodes = {
 
         for i = 0, n - 1 do
             for j = 0, 7 do
-                
                 local px = (x + j) % 64
                 local py = (y + i) % 32
 
                 local bit = (program[pointer + i] >> (7 - j)) & 1
 
-                if screen[px][py] == 1 and bit == 1 and y+i<32 then
+                if screen[px][py] == 1 and bit == 1 then
                     register[0xF] = 1
                 end
 
