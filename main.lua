@@ -1,3 +1,8 @@
+--[[
+    SPDX-FileCopyrightText: NONE
+    SPDX-License-Identifier: CC0-1.0
+]]
+
 local sys = require "system"
 --[[
 io.write("\27[2J") -- clear screen
