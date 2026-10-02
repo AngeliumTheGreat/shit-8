@@ -7,7 +7,7 @@ io.flush()
 ]]
 
 -- platform
-local platform = "windows" 
+local platform = package.config:sub(1, 1) == "\\" and "windows" or "linux"
 
 -- placeholder program, add file loading of program in here later
 local program = {0x06, 0xD0, 0x08, 0x10, 0xFF, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
@@ -76,6 +76,7 @@ local keycodes = {
 }
 
 local tick_length = 1 / 800
+local key_interval = 30
 
 local settings = {
     frequency = function(v) tick_length = 1 / v end,
@@ -84,6 +85,9 @@ local settings = {
         for i=1, 16 do
            keycodes[v:sub(i, i)] = i - 1
         end
+    end,
+    ["key-inteval"] = function(v)
+        key_interval = tonumber(v)
     end,
 }
 
@@ -515,10 +519,12 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
-    -- get_pressed()
-    local op = (program[pc] << 8) + program[pc + 1]
-    pc = pc + 2
-    -- print(string.format("PC=%04X OP=%04X", pc - 2, op))
-    opcodes[(op & 0xF000) >> 12](op)
-    sys.sleep(tick_length)
+    get_pressed()
+    for i=1, key_interval do
+        local op = (program[pc] << 8) + program[pc + 1]
+        pc = pc + 2
+        -- print(string.format("PC=%04X OP=%04X", pc - 2, op))
+        opcodes[(op & 0xF000) >> 12](op)
+        sys.sleep(tick_length)
+    end
 end
