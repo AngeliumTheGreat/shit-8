@@ -8,6 +8,9 @@ io.flush()
 
 -- platform
 local platform = package.config:sub(1, 1) == "\\" and "windows" or "linux"
+if platform == "windows" then
+    os.execute("chcp 65001")
+end
 
 -- placeholder program, add file loading of program in here later
 local program = {0x06, 0xD0, 0x08, 0x10, 0xFF, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
