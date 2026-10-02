@@ -9,9 +9,9 @@ io.flush()
 local platform = "windows" 
 
 -- placeholder program, add file loading of program in here later
-local program = {0x61,0x23}
+local program = {0xA0, 0x06, 0xD0, 0x08, 0x10, 0x00, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
 for i=0,4095 do
-    program[i] = 0
+    program[i] = program[i] or 0
 end
 
 -- load file 
@@ -113,6 +113,29 @@ local get_pressed = coroutine.wrap(function()
         coroutine.yield()
     end
 end)
+
+local function draw_screen()
+    io.write("\27[H") -- cursor to top-left
+
+    local output = {}
+
+    for y = 0, 31 do
+        local row = {}
+
+        for x = 0, 63 do
+            if screen[x][y] == 1 then
+                row[#row + 1] = "██"
+            else
+                row[#row + 1] = "  "
+            end
+        end
+
+        output[#output + 1] = table.concat(row)
+    end
+
+    io.write(table.concat(output, "\n"))
+    io.flush()
+end
 
 -- opcodes
 local opcodes = {
@@ -285,8 +308,7 @@ local opcodes = {
                 screen[px][py] = screen[px][py] ~ bit
             end
         end
-
-        screen_dirty = true
+        draw_screen()
     end,
 
     [0xE] = function (op)
@@ -354,29 +376,6 @@ local opcodes = {
         end
     end
 }
-
-local function draw_screen()
-    io.write("\27[H") -- cursor to top-left
-
-    local output = {}
-
-    for y = 0, 31 do
-        local row = {}
-
-        for x = 0, 63 do
-            if screen[x][y] == 1 then
-                row[#row + 1] = "██"
-            else
-                row[#row + 1] = "  "
-            end
-        end
-
-        output[#output + 1] = table.concat(row)
-    end
-
-    io.write(table.concat(output, "\n"))
-    io.flush()
-end
 
 -- tests if only arg is --test
 if #arg == 1 and arg[1] == "--test" then
