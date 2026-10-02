@@ -55,6 +55,9 @@ local sound_timer = 0
 -- vf is funky
 local VF = 0xF
 
+-- temp carry flag
+local carry = 0
+
 -- screen
 local screen = {}
 for x = 0, 63 do
@@ -232,32 +235,37 @@ local opcodes = {
 
         elseif c == 4 then
             if register[x] + register[y] > 0xFF then 
-                register[VF]=1
-                else register[VF]=0
+                carry=1
+                else carry=0
             end
             register[x] = (register[x] + register[y]) % 256
+            register[VF] = carry
 
         elseif c == 5 then
             if register[x] - register[y] < 0 then
-                register[VF]=0
-                else register[VF]=1
+                carry=0
+                else carry=1
             end
             register[x] = (register[x] - register[y]) % 256
+            register[VF] = carry
 
         elseif c == 6 then
-            register[VF] = register[x] & 0x1
+            carry = register[x] & 0x1
             register[x] = register[x] >> 1
+            register[VF] = carry
 
         elseif c == 7 then
             if (register[y] - register[x] < 0) then
-                register[VF]=0
-                else register[VF]=1
+                carry=0
+                else carry=1
             end
             register[x] = (register[y] - register[x]) % 256
+            register[VF] = carry
 
         elseif c == 0xE then
-            register[VF] = (register[x] & 0x80) >> 7
+            carry = (register[x] & 0x80) >> 7
             register[x] = (register[x] << 1) & 0xFF
+            register[VF] = carry
 
         else error("invalid 8XYN instruction")
 
