@@ -1,6 +1,6 @@
-# shit8
+# shit-8
 
-shit8 is a chip8 emulator that sucks
+shit-8 is a chip-8 emulator that sucks
 
 its dependencies are lua5.4 and luasystem
 
