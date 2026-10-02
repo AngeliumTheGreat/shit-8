@@ -347,7 +347,7 @@ local opcodes = {
             delay_timer_set_time = sys.monotime()
 
         elseif c == 0x18 then
-            sound_timer = register[x]
+            io.write "\a"
 
         elseif c == 0x1E then
             pointer = pointer + register[x]
@@ -379,6 +379,8 @@ local opcodes = {
 -- tests if only arg is --test
 if #arg == 1 and arg[1] == "--test" then
     local function run(op) return opcodes[(op & 0xF000) >> 12](op) end
+
+    run(0xF018)
 
     -- 1NNN
     pc = 0  -- set pc
