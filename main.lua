@@ -22,8 +22,12 @@ if (#arg>0) and not (arg[1]=="--test") then
     local rom = file:read("*a")
     file:close()
 
-    for i = 1, #rom do
-        program[i - 1] = string.byte(rom, i)
+    for i = 1, 0x200 do
+       program[i - 1] = 0
+    end
+
+    for i = 1, math.min(#rom, 0xDFF) do
+        program[i - 1 + 0x200] = string.byte(rom, i)
     end
 end
 
@@ -38,7 +42,7 @@ end
 
 -- instruction pointer and program counter
 local pointer = 0
-local pc = 0
+local pc = 0x200
 
 -- callstack
 local callstack = {}
