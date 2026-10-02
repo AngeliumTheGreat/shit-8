@@ -1,15 +1,17 @@
 local sys = require "system"
-
+--[[
 io.write("\27[2J") -- clear screen
 io.write("\27[H")  -- cursor home
 io.write("\27[?25l") -- hide cursor
 io.flush()
+]]
 
 -- platform
 local platform = "windows" 
 
 -- placeholder program, add file loading of program in here later
-local program = {0xA0, 0x06, 0xD0, 0x08, 0x10, 0x00, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
+local program = {0x06, 0xD0, 0x08, 0x10, 0xFF, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
+program[0] = 0xA0
 for i=0,4095 do
     program[i] = program[i] or 0
 end
@@ -57,9 +59,6 @@ for x = 0, 63 do
         screen[x][y] = 0
     end
 end
-
--- screen_dirty, for only drawing the screen when it has changed
-local screen_dirty = false
 
 -- array of keys for 0 to F
 local keycodes = {
@@ -496,9 +495,10 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
-    get_pressed()
+    -- get_pressed()
     local op = (program[pc] << 8) + program[pc + 1]
     pc = pc + 2
+    -- print(string.format("PC=%04X OP=%04X", pc - 2, op))
     opcodes[(op & 0xF000) >> 12](op)
     sys.sleep(tick_length)
 end
