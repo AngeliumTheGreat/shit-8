@@ -133,7 +133,7 @@ local get_pressed = coroutine.wrap(function()
     while true do
         local key = sys.readansi(0)
         key_pressed = keycodes[key]
-        io.stdin:read "*a"
+        if platform=="linux" then io.stdin:read "*a" end
         coroutine.yield()
     end
 end)
@@ -535,12 +535,12 @@ if #arg == 1 and arg[1] == "--test" then
 end
 
 while true do
-    -- get_pressed()
-    -- for i=1, key_interval do
+    get_pressed()
+    for i=1, key_interval do
         local op = (program[pc] << 8) + program[pc + 1]
         pc = pc + 2
         -- print(string.format("PC=%04X OP=%04X", pc - 2, op))
         opcodes[(op & 0xF000) >> 12](op)
         sys.sleep(tick_length)
-    -- end
+    end
 end
