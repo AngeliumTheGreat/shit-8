@@ -17,7 +17,7 @@ for i=0,4095 do
 end
 
 -- load file 
-if (#arg>0) and not (arg[1]=="--test") then
+if (#arg>0) and not (arg[1]=="--test") and arg[#arg]:sub(1, 2) ~= "--" then
     local file = assert(io.open(arg[#arg], "rb"))
     local rom = file:read("*a")
     file:close()
@@ -88,6 +88,20 @@ local settings = {
     end,
     ["key-inteval"] = function(v)
         key_interval = tonumber(v)
+    end,
+    help = function()
+        print [[
+usage: shit-8 [options] <file>
+
+options are of form --OPTION or --OPTION=VALUE
+
+options:
+--help              display this help and close the program
+--frequency=X       run the vm at X Hz
+--key-interval=X    poll for pressed keys every X clock cycles
+--keys=XXXX         use the 16 chars XXXX as the keys 0 to F
+]]
+        os.exit()
     end,
 }
 
