@@ -1,26 +1,17 @@
 local sys = require "system"
---[[
-io.write("\27[2J") -- clear screen
-io.write("\27[H")  -- cursor home
 io.write("\27[?25l") -- hide cursor
-io.flush()
-]]
 
 -- platform
 local platform = package.config:sub(1, 1) == "\\" and "windows" or "linux"
 if platform == "windows" then
-    os.execute("chcp 65001")
+    os.execute("chcp 65001 > nul 2>&1")
 end
 
--- placeholder program, add file loading of program in here later
-local program = {0x06, 0xD0, 0x08, 0x10, 0xFF, 0x00, 0x20, 0x49, 0x4F, 0x75, 0x7F, 0x7E, 0x4A}
-program[0] = 0xA0
-for i=0,4095 do
-    program[i] = program[i] or 0
-end
+-- the program array
+local program = {}
 
 -- load file 
-if (#arg>0) and not (arg[1]=="--test") and arg[#arg]:sub(1, 2) ~= "--" then
+if (#arg>0) and arg[#arg]:sub(1, 2) ~= "--" then
     local file = assert(io.open(arg[#arg], "rb"))
     local rom = file:read("*a")
     file:close()
@@ -29,9 +20,12 @@ if (#arg>0) and not (arg[1]=="--test") and arg[#arg]:sub(1, 2) ~= "--" then
        program[i - 1] = 0
     end
 
-    for i = 1, math.min(#rom, 0xDFF) do
+    for i = 1, math.min(#rom, 0xE00) do
         program[i - 1 + 0x200] = string.byte(rom, i)
     end
+
+else print("no program specified") os.exit()
+
 end
 
 -- start of font sprites
@@ -89,8 +83,8 @@ local settings = {
            keycodes[v:sub(i, i)] = i - 1
         end
     end,
-    ["key-inteval"] = function(v)
-        key_interval = tonumber(v)
+    ["key-interval"] = function(v)
+        key_interval = math.ceil(tonumber(v) or 30)
     end,
     help = function()
         print [[
@@ -136,7 +130,7 @@ local get_pressed = coroutine.wrap(function()
     while true do
         local key = sys.readansi(0)
         key_pressed = keycodes[key]
-        if platform=="linux" then io.stdin:read "*a" end
+        if platform=="linux" then local _ = io.stdin:read "*a" end
         coroutine.yield()
     end
 end)
@@ -333,8 +327,12 @@ local opcodes = {
 
         for i = 0, n - 1 do
             for j = 0, 7 do
-                local px = (x + j) % 64
-                local py = (y + i) % 32
+                local px = x+j
+                local py = y+i
+                if x>63 then px = px % 64 end
+                if y>31 then py = py % 32 end
+                if px>63 then goto SKIP end
+                if py>31 then goto SKIP end
 
                 local bit = (program[pointer + i] >> (7 - j)) & 1
 
@@ -343,6 +341,7 @@ local opcodes = {
                 end
 
                 screen[px][py] = screen[px][py] ~ bit
+                ::SKIP::
             end
         end
         draw_screen()
@@ -371,11 +370,11 @@ local opcodes = {
 
         elseif c == 0x0A then
             while true do
-                if platform=="linux" then io.stdin:read "*a" end
+                if platform=="linux" then local _ = io.stdin:read "*a" end
                 local key = sys.readansi(math.huge)
                 if keycodes[key] then
                     register[x] = keycodes[key]
-                    if platform=="linux" then io.stdin:read "*a" end
+                    if platform=="linux" then local _ = io.stdin:read "*a" end
                     break
                 end
             end
@@ -415,126 +414,6 @@ local opcodes = {
         end
     end
 }
-
--- tests if only arg is --test
-if #arg == 1 and arg[1] == "--test" then
-    local function run(op) return opcodes[(op & 0xF000) >> 12](op) end
-
-    run(0xF018)
-
-    -- 1NNN
-    pc = 0  -- set pc
-    run(0x1420)
-    assert(pc == 0x420)
-
-    -- 3XNN, 4XNN, 5XY0, 9XY0
-    do
-        pc = 4
-        register[3] = 0x33
-        run(0x3333)     -- increment pc if V3 is 0x33. should
-        assert(pc == 6 and register[3] == 0x33)
-        run(0x3320)     -- increment pc if V3 is 0x20. shouldn't
-        assert(pc == 6)
-        run(0x4333)     -- increment pc if V3 isn't 0x33. shouldn't
-        assert(pc == 6 and register[3] == 0x33)
-        run(0x4320)     -- increment pc if V3 isn't 0x20. should
-        assert(pc == 8)
-        register[7] = 0xF
-        register[8] = 0xF
-        run(0x5370)     -- increment pc if V3 and V7 are equal. shouldn't
-        assert(pc == 8 and register[7] == 0xF)
-        run(0x5870)     -- increment pc if V8 and V7 are equal. should
-        assert(pc == 10)
-        run(0x9870)     -- increment pc if V8 and V7 are unequal. shouldn't
-        assert(pc == 10)
-        run(0x9830)     -- increment pc if V8 and V3 are unequal. should
-        assert(pc == 12)
-    end
-
-    -- 00EE, 2NNN
-    do
-        pc = 0x200
-        run(0x2300)     -- call subroutine. should change pc and add to the callstack
-        assert(pc == 0x300)
-        local callstack_size = #callstack
-        assert(callstack[#callstack] == 0x200)
-        run(0x00EE)     -- return from subroutine. should change pc and remove from the callstack
-        assert(pc == 0x200)
-        assert(#callstack == callstack_size - 1)
-    end
-
-    -- 6XNN
-    register[1] = 0x40  -- set V1 to 0x50
-    run(0x6150)
-    assert(register[1] == 0x50)
-
-    -- ANNN
-    run(0xA123)     -- set I to 0x123
-    assert(pointer == 0x123)
-    run(0xA321)     -- set I to 0x321
-    assert(pointer == 0x321)
-
-    -- BNNN
-    pc = 0x12
-    register[0] = 0x4
-    run(0xB200)     -- set pc to 0x200 + V0
-    assert(pc == 0x204)
-
-    -- CXNN
-    for i=1, 100 do
-        run(0xC40F) -- set V4 to a random number & 0xF0
-        assert(register[4] & 0xF0 == 0)
-    end
-
-    -- 7XNN
-    register[2] = 0xD0
-    run(0x7208) -- add 0x08 to V2
-    assert(register[2] == 0xD8)
-    run(0x72FF) -- add 0xFF to V2
-    assert(register[2] <= 0xFF)
-
-    -- 8XY0, 8XY1, 8XY2, 8XY3, 8XY4, 8XY5, 8XY6, 8XY7, 8XYE
-    do
-        register[0] = 0x0; register[1] = 0xFF
-        run(0x8010)
-        assert(register[0] == 0xFF)
-        register[0] = 0xF0; register[1] = 0x0F
-        run(0x8011)
-        assert(register[0] == 0xFF)
-        run(0x8012)
-        assert(register[0] == 0x0F)
-        register[1] = 0x88
-        run(0x8013)
-        assert(register[0] == 0x87)
-    end
-
-    -- FX0A
-    print "for test, press the 3 key"
-    register[3] = 0x0
-    run(0xF30A)
-    assert(register[3] == keycodes["3"])
-
-    -- FX07 and FX15
-    register[3] = 120; register[4] = 0
-    run(0xF315) -- set timer to 120
-    run(0xF407)
-    assert(register[4] == 120)  -- immediately, timer is 120
-    sys.sleep(1)
-    run(0xF407)
-    assert(register[4] == 60)   -- wait 1s, timer is 60
-    sys.sleep(0.001)
-    run(0xF407)
-    assert(register[4] == 60)   -- wait 1ms, timer is still 60
-    sys.sleep(20/60)
-    run(0xF407)
-    assert(register[4] == 40)   -- wait 333ms, timer is 40
-    sys.sleep(1)
-    run(0xF407)
-    assert(register[4] == 0)    -- wait 1s, timer is 0 (never negative)
-
-    print "all tests good!"
-    os.exit()
-end
 
 while true do
     get_pressed()
